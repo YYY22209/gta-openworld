@@ -1,0 +1,11 @@
+# 依赖与构建产物（不进仓库）
+node_modules/
+dist-electron/
+dist/
+*.exe
+*.exe.blockmap
+
+# 系统与编辑器
+.DS_Store
+Thumbs.db
+*.log

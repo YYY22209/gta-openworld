@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>街巷行者</title>
+  <link rel="stylesheet" href="./css/style.css">
+  <!-- importmap：固定 Three.js 版本号，使用 webgpu 构建（内部自动降级 WebGL2） -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.180.0/build/three.webgpu.js",
+      "three/webgpu": "https://unpkg.com/three@0.180.0/build/three.webgpu.js",
+      "three/addons/": "https://unpkg.com/three@0.180.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <!-- 游戏主画布 -->
+  <canvas id="game-canvas"></canvas>
+
+  <!-- 镜头暗角 -->
+  <div id="vignette"></div>
+
+  <!-- 加载遮罩 -->
+  <div id="loading" class="hidden">
+    <div class="loading-title">街巷行者</div>
+    <div class="loading-sub" id="loading-status">正在初始化渲染器...</div>
+    <div id="loading-bar"><div id="loading-bar-fill"></div></div>
+  </div>
+
+  <!-- 首页（点击开始，同时解锁音频） -->
+  <div id="home">
+    <img class="home-avatar" src="assets/ahao-studio.jpg" alt="阿浩数码工作室">
+    <div class="home-studio">阿浩数码工作室 出品</div>
+    <div class="home-title">街巷行者</div>
+    <div class="home-sub">GTA 风格开放世界 · Three.js · WebGPU · 2048×2048 米城市 · 20 个任务 · 4 星通缉</div>
+    <div class="home-intro">
+      一座 2048×2048 米的写实城市在浏览器里向你敞开：街区巷弄、高速公路、河滩城郊任你探索。
+      开车穿行于 AI 车流之间，接下主线与支线共 20 个任务，体验动态昼夜、全套街景音效、
+      4 星警察通缉与金钱商店经济。全程免费，即开即玩。
+    </div>
+    <div class="home-keys">
+      <div class="home-keys-title">操作按键</div>
+      <div class="home-keys-grid">
+        <span class="k">W A S D</span><span>移动</span>
+        <span class="k">Shift</span><span>奔跑冲刺</span>
+        <span class="k">Space</span><span>跳跃</span>
+        <span class="k">E</span><span>互动 / 上下车 / 对话</span>
+        <span class="k">M</span><span>任务大地图</span>
+        <span class="k">V</span><span>飞行观察模式</span>
+        <span class="k">O</span><span>画质设置面板</span>
+        <span class="k">T</span><span>时间快进 1 小时</span>
+        <span class="k">Q / C</span><span>修理包 / 氮气加速（驾驶中）</span>
+        <span class="k">F3</span><span>显示 / 隐藏 HUD</span>
+        <span class="k">鼠标</span><span>转动视角（点击画面锁定）</span>
+      </div>
+    </div>
+    <button id="start-btn">开 始 游 戏</button>
+    <div class="home-copyright">建议使用 Chrome / Edge 浏览器 · 完全免费 · 仅支持电脑游玩</div>
+  </div>
+
+  <!-- 手机端拦截提示 -->
+  <div id="mobile-block" class="hidden">
+    <div class="mobile-icon">🖥️</div>
+    <div class="mobile-title">请在电脑浏览器打开</div>
+    <div class="mobile-sub">本游戏需要键盘 + 鼠标操作和独立显卡，<br>暂不支持手机 / 平板访问。</div>
+  </div>
+
+  <!-- 错误提示（稳定性看门狗） -->
+  <div id="error-toast" class="hidden"></div>
+
+  <!-- HUD 面板（左上角） -->
+  <div id="hud">
+    <div class="hud-row" id="hud-pos">坐标: --</div>
+    <div class="hud-row" id="hud-fps">FPS: --</div>
+    <div class="hud-row" id="hud-mode">模式: 步行</div>
+    <div class="hud-row hud-clock" id="hud-clock">🕐 10:00</div>
+    <div class="hud-row hud-money" id="hud-money">💰 ¥0</div>
+    <div class="hud-row hud-items" id="hud-items">🔧×0 ⚡×0</div>
+    <div class="hud-row hud-dim" id="hud-backend">渲染后端: --</div>
+  </div>
+
+  <!-- 通缉星级（右上角，红蓝闪烁） -->
+  <div id="wanted-stars" class="hidden">★★★★</div>
+
+  <!-- 被捕画面 -->
+  <div id="busted" class="hidden">
+    <div class="busted-title">BUSTED</div>
+    <div class="busted-sub">被 逮 捕</div>
+  </div>
+
+  <!-- 准星（第一人称） -->
+  <div id="crosshair"></div>
+
+  <!-- 情境提示（按 E 上车 等） -->
+  <div id="hint"></div>
+
+  <!-- ================= 任务系统 UI ================= -->
+  <!-- 右上角：当前任务目标 -->
+  <div id="quest-objective"></div>
+
+  <!-- 屏幕下方：目标方向箭头 -->
+  <div id="quest-arrow">▲</div>
+
+  <!-- 顶部：事件横幅 -->
+  <div id="quest-banner" class="hidden"></div>
+
+  <!-- 底部：NPC 对话面板 -->
+  <div id="quest-dialog" class="hidden">
+    <div id="quest-dialog-name"></div>
+    <div id="quest-dialog-text"></div>
+    <div class="quest-dialog-tip">按 E / 点击 继续 ▸</div>
+  </div>
+
+  <!-- 右上：手机来电弹窗 -->
+  <div id="quest-phone" class="hidden">
+    <div class="quest-phone-head">📱 来电</div>
+    <div id="quest-phone-caller"></div>
+    <div id="quest-phone-text"></div>
+    <div class="quest-dialog-tip">按 E 接听 ▸</div>
+  </div>
+
+  <!-- 中央：任务结果弹窗 -->
+  <div id="quest-result" class="hidden">
+    <div id="quest-result-title"></div>
+    <div id="quest-result-desc"></div>
+    <div id="quest-result-btns">
+      <button id="quest-result-retry">R · 重试任务</button>
+      <button id="quest-result-abandon">X · 放弃任务</button>
+    </div>
+  </div>
+
+  <!-- 画质设置面板（O 键） -->
+  <div id="gfx-panel" class="hidden"></div>
+
+  <!-- 商店面板（车店 / 便利店） -->
+  <div id="shop-panel" class="hidden">
+    <div id="shop-title">商店</div>
+    <div id="shop-money">💰 ¥0</div>
+    <div id="shop-list"></div>
+    <div class="shop-tip">点击或按数字键购买 · E / Esc 关闭</div>
+  </div>
+
+  <!-- 大地图 + 任务列表（M 键） -->
+  <div id="map-screen" class="hidden">
+    <div class="map-frame">
+      <canvas id="map-canvas" width="640" height="640"></canvas>
+      <div class="map-side">
+        <div class="map-side-title">任务列表<span class="map-side-sub">M 键关闭</span></div>
+        <div id="map-quest-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 底部操作提示 -->
+  <div id="tip">WASD 移动 | E 互动 | M 地图 | V 飞行 | T 时间+1h | Q 修车 C 氮气 | O 画质 | F3 HUD</div>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>

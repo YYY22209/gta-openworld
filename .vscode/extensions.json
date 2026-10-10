@@ -1,0 +1,9 @@
+{
+  // 打开项目时 VS Code 会自动推荐安装这些插件（已装好，仅作记录/团队共享）
+  "recommendations": [
+    "ritwickdey.liveserver",
+    "dbaeumer.vscode-eslint",
+    "usernamehw.errorlens",
+    "zignd.html-css-class-completion"
+  ]
+}

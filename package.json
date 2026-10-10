@@ -1,0 +1,44 @@
+{
+  "name": "gta-openworld",
+  "version": "3.1.0",
+  "description": "街巷行者 —— GTA 风格网页第一人称开放世界（Three.js + WebGPU），阿浩数码工作室出品；网页版与 Electron 桌面版共用同一套游戏核心代码",
+  "main": "electron/main.cjs",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "build:win": "electron-builder --win --x64"
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.ahaodigital.jiexiangxz",
+    "productName": "街巷行者",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "electron/**",
+      "index.html",
+      "assets/**",
+      "css/**",
+      "js/**",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "artifactName": "JieXiangXingZhe-Setup-${version}.${ext}"
+    }
+  }
+}

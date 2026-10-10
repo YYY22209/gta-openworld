@@ -1,0 +1,20 @@
+{
+  // ---- Live Server：一键预览配置 ----
+  "liveServer.settings.port": 5500,
+  "liveServer.settings.root": "/",
+  "liveServer.settings.donotShowInfoMsg": true,
+  "liveServer.settings.fullReload": true,
+
+  // ---- 编辑器基础 ----
+  "files.eol": "\n",
+  "files.exclude": {
+    "node_modules": true,
+    "dist-electron": true
+  },
+  "editor.formatOnSave": false,
+  "editor.tabSize": 2,
+  "editor.detectIndentation": false,
+  "search.exclude": {
+    "node_modules": true
+  }
+}
